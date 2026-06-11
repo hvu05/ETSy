@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  moduleFormat  = "cjs"
+}
+
+
+enum Role {
+  CUSTOMER
+  ORGANIZER
+  ADMIN
+}
+
+model User {
+  id           String         @id @default(uuid())
+  email        String         @unique
+  password     String         // Đã băm bằng bcrypt
+  fullName     String
+  phoneNumber  String?
+  role         Role           @default(CUSTOMER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique // Lưu chuỗi đã hash hoặc chuỗi UUID ngẫu nhiên
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token, userId])
+}
